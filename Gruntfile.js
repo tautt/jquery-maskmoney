@@ -1,4 +1,4 @@
-module.exports = function(grunt) {
+module.exports = function (grunt) {
     "use strict";
 
     grunt.initConfig({
@@ -37,13 +37,21 @@ module.exports = function(grunt) {
             },
             build: {
                 files: [
-                { src: "src/jquery.maskMoney.js", dest: "dist/jquery.maskMoney.min.js" },
+					{ src: "src/jquery.maskMoney.js", dest: "dist/jquery.maskMoney.min.js" },
                 ]
             }
         },
         qunit: {
-          all: ["test/*.html"]
-        },
+		  all: {
+			options: {
+			  urls: ["http://localhost:9000/test/<%= pkg.name %>.html"],
+			  page : {
+				viewportSize : { width: 1280, height: 800 }
+			  }
+			}
+		  }
+		},
+        
         jquerymanifest: {
             options: {
                 source: grunt.file.readJSON("package.json"),
@@ -58,8 +66,114 @@ module.exports = function(grunt) {
             }
         },
         watch: {
-          files: ["test/*.html", "test/*.js", "src/*.js"],
-          tasks: ["jshint", "qunit"]
+            files: ["test/*.html", "test/*.js", "src/*.js"],
+            tasks: ["jshint", "qunit"]
+        },
+		connect: {
+		  tests: {
+			options: {
+			  hostname: "*",
+			  port: 9000
+			}
+		  }
+		},
+        "saucelabs-qunit": {
+            all: {
+                options: {
+                    urls: ["http://localhost:9000/test/jquery-maskmoney.html"],
+                    build: process.env.TRAVIS_JOB_ID,
+					testname: "Sauce Unit Test for maskMoney",
+					framework: "qunit",
+                    browsers: [
+                      // iOS
+                      {
+                          browserName: "iphone",
+                          platform: "OS X 10.9",
+                          version: "7.1"
+                      },
+					  {
+                          browserName: "iphone",
+                          platform: "OS X 10.9",
+                          version: "5.1"
+                      },
+					  {
+                          browserName: "iphone",
+                          platform: "OS X 10.9",
+                          version: "6.0"
+                      },
+					  
+                      {
+                          browserName: "ipad",
+                          platform: "OS X 10.9",
+                          version: "7.1"
+                      },
+                      // Android
+                      {
+                          browserName: "android",
+                          platform: "Linux",
+                          version: "4.3"
+                      },
+                      // OS X
+                      {
+                          browserName: "safari",
+                          platform: "OS X 10.9",
+                          version: "7"
+                      },
+                      {
+                          browserName: "safari",
+                          platform: "OS X 10.8",
+                          version: "6"
+                      },
+                      {
+                          browserName: "firefox",
+                          platform: "OS X 10.9",
+                          version: "53"
+                      },
+                      // Windows
+                      {
+                          browserName: "internet explorer",
+                          platform: "Windows 8.1",
+                          version: "11"
+                      },
+                      {
+                          browserName: "internet explorer",
+                          platform: "Windows 8",
+                          version: "10"
+                      },
+                      {
+                          browserName: "internet explorer",
+                          platform: "Windows 7",
+                          version: "11"
+                      },
+                      {
+                          browserName: "internet explorer",
+                          platform: "Windows 7",
+                          version: "10"
+                      },
+                      {
+                          browserName: "internet explorer",
+                          platform: "Windows 7",
+                          version: "9"
+                      },
+                      {
+                          browserName: "firefox",
+                          platform: "Windows 7",
+                          version: "53"
+                      },
+                      {
+                          browserName: "chrome",
+                          platform: "Windows 7",
+                          version: "34"
+                      },
+                      // Linux
+                      {
+                          browserName: "firefox",
+                          platform: "Linux",
+                          version: "53"
+                      }
+                    ]
+                }
+            }
         }
     });
 
@@ -68,8 +182,11 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks("grunt-contrib-uglify");
     grunt.loadNpmTasks("grunt-jquerymanifest");
     grunt.loadNpmTasks("grunt-contrib-qunit");
-    grunt.loadNpmTasks("grunt-contrib-watch");
+    grunt.loadNpmTasks("grunt-contrib-watch");	
+	grunt.loadNpmTasks("grunt-contrib-connect");
+	grunt.loadNpmTasks("grunt-saucelabs");	
 
-    grunt.registerTask("test", ["jshint", "qunit"]);
-    grunt.registerTask("default", ["jshint", "qunit", "concat", "uglify", "jquerymanifest"]);
+    grunt.registerTask("test", ["connect", "saucelabs-qunit"]);	
+    grunt.registerTask("ci", ["jshint", "connect", "qunit", "saucelabs-qunit"]);
+    grunt.registerTask("default", ["jshint", "connect", "qunit", "concat", "uglify", "jquerymanifest"]);
 };
